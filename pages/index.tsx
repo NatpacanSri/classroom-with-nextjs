@@ -1,257 +1,212 @@
 import Head from 'next/head'
-import clientPromise from '../lib/mongodb'
-import type { InferGetServerSidePropsType, GetServerSideProps } from 'next'
+import { useState } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+
 
 type ConnectionStatus = {
   isConnected: boolean
 }
 
-export const getServerSideProps: GetServerSideProps<
-  ConnectionStatus
-> = async () => {
-  try {
-    await clientPromise
-    // `await clientPromise` will use the default database passed in the MONGODB_URI
-    // However you can use another database (e.g. myDatabase) by replacing the `await clientPromise` with the following code:
-    //
-    // `const client = await clientPromise`
-    // `const db = client.db("myDatabase")`
-    //
-    // Then you can execute queries against your database like so:
-    // db.find({}) or any of the MongoDB Node Driver commands
+type Props = {
+  datas:[Data]
+}
 
+type Data = {
+  _id:String
+  stdID:String
+  stdName:String
+  gender:String
+  age:String
+}
+
+export const getServerSideProps = async () => {
+  try {
+
+    let response = await fetch('http://localhost:3000/api/getDatas')
+    let datas = await response.json()
+    
     return {
-      props: { isConnected: true },
+      props: { datas:JSON.parse(JSON.stringify(datas)) }
     }
   } catch (e) {
     console.error(e)
     return {
-      props: { isConnected: false },
+      props: { datas: [] },
     }
   }
 }
 
-export default function Home({
-  isConnected,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function Home(props:Props) {
+
+  const [datas,setDatas] = useState<[Data]>(props.datas)
+
+  const handleDelete =async (id:String) => {
+    try {
+      
+      let response = await fetch('http://localhost:3000/api/deleteData?id='+id,{
+        method:"POST",
+        headers:{
+          Accept:'application/json, text/plain, */*',
+          "Content-Type":'application/json'
+        }
+      })
+      let data = await response.json()
+
+      window.location.reload()
+
+    } catch (e) {
+      console.error('An error occured while deleting ',e)
+
+    }
+  }
+
   return (
-    <div className="container">
+      <div className='container'>
+        
       <Head>
-        <title>Create Next App</title>
+        <title>Student</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
-        <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js with MongoDB!</a>
-        </h1>
-
-        {isConnected ? (
-          <h2 className="subtitle">You are connected to MongoDB</h2>
-        ) : (
-          <h2 className="subtitle">
-            You are NOT connected to MongoDB. Check the <code>README.md</code>{' '}
-            for instructions.
-          </h2>
-        )}
-
-        <p className="description">
-          Get started by editing <code>pages/index.js</code>
-        </p>
-
-        <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="card"
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+      <div className='body'>
+        <div className="header">
+          <div className="title">
+            <h1>All Student ...</h1>
+            <p>There are <b>{datas?.length>0?(datas.length):("No fucking")}</b> students in the classroom.</p>
+          </div>
+        
+        <a href="/addStd"><b>+</b>Add Student</a>
         </div>
-      </main>
+        {datas?.length > 0 ? (
+          <ul>
+            {datas.map((data,index)=>{
+              return(
+                <li>
+                  <div className='info'>
+                    <p className='stdid'>{data.stdID}</p>
+                    <h3>{data.stdName}</h3>
+                    <p><span>gender: <i>{data.gender}</i></span> age: <i>{data.age}</i></p>
+                  </div>
+                  <div className='action'>
+                    <a href={`/${data._id}`} className='icon'><FontAwesomeIcon className='_icon' icon={faEdit} /></a>
+                    <button className='icon' 
+                      onClick={()=> handleDelete(data._id as String)}
+                    ><FontAwesomeIcon className='_icon' icon={faTrash} /></button>
+                  </div>
+                </li>
+              ) 
+            })}
+          </ul>
+        ):(
+          <h2>No Student in you class</h2>
+        ) }
+      </div>
 
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className="logo" />
-        </a>
-      </footer>
+      <style jsx global>
+      {`
 
-      <style jsx>{`
-        .container {
-          min-height: 100vh;
-          padding: 0 0.5rem;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
+       *{
+        font-family:sans-serif;
+        margin:0;
+        padding:0;
+        color:white;
+       }
+       
+       .container{
+        display:flex;
+        background-color:#282c34;
+        min-height:100vh;
+        
+       }
 
-        main {
-          padding: 5rem 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
+       .body{
+        width:50vw;
+        margin:40px auto;
+        // background-color:#2f333d;
+        padding:5px 23px;
+        border-radius:15px;
+       }
+       .body h1{
+        // margin:20px 0;
+       }
 
-        footer {
-          width: 100%;
-          height: 100px;
-          border-top: 1px solid #eaeaea;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
+       .header{
+        display:flex;
+        padding:20px 0;
+       }
+      
+       .header a {
+        margin:auto 0 auto auto;
+        padding-right:20px;
+       }
 
-        footer img {
-          margin-left: 0.5rem;
-        }
+       ul{
+        background-color:#2f333d;
+        border-radius:15px;
+        min-height:80vh;
+        padding:20px 23px;
+       }
 
-        footer a {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
+       li{
+        list-style:none;
+        display:flex;
+        background-color:#414655;
+        border-radius:15px;
+        margin-bottom:10px;
+       }
 
-        a {
-          color: inherit;
-          text-decoration: none;
-        }
+       .info{
+        // border:1px solid red;
+        margin:7px 10px;
+        padding:7px 10px;
+       }
+       .info .stdid{
+        opacity: 0.5;
+       }
+       .info h3{
+        margin:7px 0;
+       }
+       .info p{
+        display:flex;
+       }
+       .info p i{
+        margin-left:5px;
+       }
+       .info span{
+        display:flex;
+        width:120px;
+       }
+       .action{
+        margin:auto 0 auto auto;
+        padding:20px;
+        display:flex;
+        border:none;
+       }
 
-        .title a {
-          color: #0070f3;
-          text-decoration: none;
-        }
+       .action button{
+        background:none;
+        border:none;
+        margin-left:15px
+       }
 
-        .title a:hover,
-        .title a:focus,
-        .title a:active {
-          text-decoration: underline;
-        }
+       .action .icon{
+        display:block;
+        width:20px;
+        height:20px;
+        cursor:pointer;
+       }
 
-        .title {
-          margin: 0;
-          line-height: 1.15;
-          font-size: 4rem;
-        }
+       .action FontAwesomeIcon{
+        fill:black;
+       }
 
-        .title,
-        .description {
-          text-align: center;
-        }
-
-        .subtitle {
-          font-size: 2rem;
-        }
-
-        .description {
-          line-height: 1.5;
-          font-size: 1.5rem;
-        }
-
-        code {
-          background: #fafafa;
-          border-radius: 5px;
-          padding: 0.75rem;
-          font-size: 1.1rem;
-          font-family: Menlo, Monaco, Lucida Console, Liberation Mono,
-            DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
-        }
-
-        .grid {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-wrap: wrap;
-
-          max-width: 800px;
-          margin-top: 3rem;
-        }
-
-        .card {
-          margin: 1rem;
-          flex-basis: 45%;
-          padding: 1.5rem;
-          text-align: left;
-          color: inherit;
-          text-decoration: none;
-          border: 1px solid #eaeaea;
-          border-radius: 10px;
-          transition: color 0.15s ease, border-color 0.15s ease;
-        }
-
-        .card:hover,
-        .card:focus,
-        .card:active {
-          color: #0070f3;
-          border-color: #0070f3;
-        }
-
-        .card h3 {
-          margin: 0 0 1rem 0;
-          font-size: 1.5rem;
-        }
-
-        .card p {
-          margin: 0;
-          font-size: 1.25rem;
-          line-height: 1.5;
-        }
-
-        .logo {
-          height: 1em;
-        }
-
-        @media (max-width: 600px) {
-          .grid {
-            width: 100%;
-            flex-direction: column;
-          }
-        }
-      `}</style>
-
-      <style jsx global>{`
-        html,
-        body {
-          padding: 0;
-          margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
-            Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-            sans-serif;
-        }
-
-        * {
-          box-sizing: border-box;
-        }
-      `}</style>
+       ._icon{
+        
+       }
+       
+      `}
+      </style>  
     </div>
   )
 }
