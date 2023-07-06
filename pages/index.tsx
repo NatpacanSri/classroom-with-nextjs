@@ -58,7 +58,7 @@ export default function Home(props:Props) {
     } catch (e) {
       console.error('An error occured while deleting ',e)
 
-    }
+    } 
   }
 
   return (
