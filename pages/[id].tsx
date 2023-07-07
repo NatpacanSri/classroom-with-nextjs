@@ -4,24 +4,24 @@ import Head from 'next/head'
 import router from 'next/router'
 
 type PageParams = {
-    id:String
+    id:string
 }
 type ContentPageProps = {
     data:Data
 }
 type Data = {
-    _id:String
-    stdID:String
-    stdName:String
-    gender:String
-    age:String
+    _id:string
+    stdID:string
+    stdName:string
+    gender:string
+    age:string
 }
 type ResponeFromServer = {
-    _id:String
-    stdID:String
-    stdName:String
-    gender:String
-    age:String
+    _id:string
+    stdID:string
+    stdName:string
+    gender:string
+    age:string
 }
 
 export async function getStaticProps({ params }
