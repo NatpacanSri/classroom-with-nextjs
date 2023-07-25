@@ -13,11 +13,11 @@ type Props = {
 }
 
 type Data = {
-  _id:String
-  stdID:String
-  stdName:String
-  gender:String
-  age:String
+  _id:string
+  stdID:string
+  stdName:string
+  gender:string
+  age:string
 }
 
 export const getServerSideProps = async () => {
@@ -44,7 +44,7 @@ export default function Home(props:Props) {
   const handleDelete =async (id:String) => {
     try {
       
-      let response = await fetch('http://localhost:3000/api/deleteData?id='+id,{
+      let response = await fetch('http://localhost:3000/api/deleteData?id='+id, {
         method:"POST",
         headers:{
           Accept:'application/json, text/plain, */*',
